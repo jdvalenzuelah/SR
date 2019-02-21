@@ -1,0 +1,1 @@
+Correr programa tarea 1, imagenes por cada item seran escritas en la misma carpeta.
