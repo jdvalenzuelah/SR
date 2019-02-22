@@ -3,7 +3,6 @@
 
 from BMP import BMP
 from OBJ import OBJ
-import math
 
 class SR(object):
 
@@ -132,6 +131,9 @@ class SR(object):
 			self.glLine(st[0], st[1], fi[0], fi[1])
 
 	def glFilledPolygon(self, vertexList, fillColor):
+		"""
+		Poligono relleno de fillcolor
+		"""
 		startX = sorted(vertexList, key=lambda tup: tup[0])[0][0]
 		finishX = sorted(vertexList, key=lambda tup: tup[0], reverse = True)[0][0]
 

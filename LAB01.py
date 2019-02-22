@@ -1,25 +1,4 @@
 #Lab 01
-#Josue Valenzuela
-#https://hackernoon.com/computer-graphics-scan-line-polygon-fill-algorithm-3cb47283df6
-def norS(n):
-	c = int(500 * (0+1) * (1/2) + 25)
-	step = 1/500
-	if n == 0 or n == -1 or n == 1:
-		return n
-	if n < c:
-		return (-1+(n*step))
-	return n*step
-
-def poligono(vertexList, image):
-	for i in range(len(vertexList)):
-		if i == len(vertexList)-1:
-			st = vertexList[i]
-			fi = vertexList[0]
-		else:
-			st = vertexList[i]
-			fi = vertexList[i+1]
-		image.glLine(st[0], st[1], fi[0], fi[1])
-
 #Universidad del Valle de Guatemala
 #Josue Valenzuela 171001
 
