@@ -146,8 +146,6 @@ class SR(object):
 		startY = int(self.__viewPortSize[0] * (startY+1) * (1/2) + self.__viewPortStart[0])
 		finishY = int(self.__viewPortSize[0] * (finishY+1) * (1/2) + self.__viewPortStart[0])
 
-		self.glPolygon(vertexList)
-
 		for x in range(startX, finishX+1):
 			for y in range(startY, finishY+1):
 				isInside = self.glPointInPolygon(self.norX(x), self.norY(y), vertexList)

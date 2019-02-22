@@ -1,7 +1,7 @@
 #Lab 01
 #Universidad del Valle de Guatemala
 #Josue Valenzuela 171001
-#git test
+#git testd
 from SR import *
 from random import random
 
