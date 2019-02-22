@@ -1,6 +1,6 @@
 #Universidad del Valle de Guatemala
 #Josue Valenzuela 171001
-
+#Loacal path> C:\Users\daval\Desktop\UVG\A3\C1\Graficas\Tareas con SR\SR
 from BMP import BMP
 from OBJ import OBJ
 
@@ -130,7 +130,7 @@ class SR(object):
 				fi = vertexList[i+1]
 			self.glLine(st[0], st[1], fi[0], fi[1])
 
-	def glFilledPolygon(self, vertexList, fillColor):
+	def glFilledPolygon(self, vertexList):
 		"""
 		Poligono relleno de fillcolor
 		"""
