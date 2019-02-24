@@ -101,20 +101,25 @@ class SR(object):
 		"""
 		self.__filename = filename
 
-	def loadOBJ(self, filename, translate=(0, 0), scale=(1, 1)):
+	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1)):
 		"""
 		cargar OBJ file, wireframe
 		"""
 		obj = OBJ(filename)
 		obj.load()
-		vertex = obj.getVertexs()
-		faces = obj.getFaces()
+		vertex = obj.getVertexList()
+		faces = obj.getFaceList()
+		nvertex = obj.getVertexNormalList()
+		light = (0,0,1)
 		for face in faces:
 			cooList = []
 			for vertexN in face:
-				coo = ((vertex[vertexN-1][0] + translate[0]) * scale[0], (vertex[vertexN-1][1] + translate[1]) * scale[1])
+				coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
 				cooList.append(coo)
-			self.glPolygon(cooList)
+				intensity = self.dot(nvertex[vertexN[1]-1], light)
+			if intensity < 0:
+				continue
+			self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
 			cooList = []
 
 	def glPolygon(self, vertexList):
@@ -130,10 +135,12 @@ class SR(object):
 				fi = vertexList[i+1]
 			self.glLine(st[0], st[1], fi[0], fi[1])
 
-	def glFilledPolygon(self, vertexList):
+	def glFilledPolygon(self, vertexList, color=None):
 		"""
 		Poligono relleno de fillcolor
 		"""
+		color = self.__color if color == None else self.__image.color(int(255*color[0]), int(255*color[1]), int(255*color[2]))
+
 		startX = sorted(vertexList, key=lambda tup: tup[0])[0][0]
 		finishX = sorted(vertexList, key=lambda tup: tup[0], reverse = True)[0][0]
 
@@ -150,7 +157,7 @@ class SR(object):
 			for y in range(startY, finishY+1):
 				isInside = self.glPointInPolygon(self.norX(x), self.norY(y), vertexList)
 				if isInside:
-					self.__image.point(x, y, self.__color)
+					self.__image.point(x, y, color)
 
 
 	def norX(self, x):
@@ -188,3 +195,8 @@ class SR(object):
 			return False
 		else:
 			return True
+	def dot(self, v0, v1):
+		"""
+		producto punto
+		"""
+		return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2]

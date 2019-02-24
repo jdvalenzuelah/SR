@@ -19,6 +19,7 @@ class BMP(object):
 			self.width = abs(int(width))
 			self.height = abs(int(height))
 			self.framebuffer = []
+			self.zbuffer = []
 			self.clear()
 
 		def clear(self, r=0, b=0, g=0):
@@ -32,6 +33,8 @@ class BMP(object):
 				]
 				for y in range(self.height)
 			]
+
+			self.zbuffer = [ [-float('inf') for x in range(self.width)] for y in range(self.height)]
 
 		def color(self, r=0, g=0, b=0):
 			"""
