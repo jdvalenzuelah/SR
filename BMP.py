@@ -91,7 +91,7 @@ class BMP(object):
 							if self.zbuffer[y][x] == -float("inf"):
 								file.write(BLACK)
 							else:
-								z = abs(int(self.zbuffer[y][x]*255))
+								z = 255-abs(int(self.zbuffer[y][x]*255))
 								file.write(self.color(z,z,z))
 						else:
 							file.write(self.framebuffer[y][x])
