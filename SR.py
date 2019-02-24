@@ -101,7 +101,7 @@ class SR(object):
 		"""
 		self.__filename = filename
 
-	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1)):
+	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True):
 		"""
 		cargar OBJ file, wireframe
 		"""
@@ -119,7 +119,10 @@ class SR(object):
 				intensity = self.dot(nvertex[vertexN[1]-1], light)
 			if intensity < 0:
 				continue
-			self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
+			if fill:
+				self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
+			else:
+				self.glPolygon(cooList)
 			cooList = []
 
 	def glPolygon(self, vertexList):
@@ -152,12 +155,14 @@ class SR(object):
 
 		startY = int(self.__viewPortSize[0] * (startY+1) * (1/2) + self.__viewPortStart[0])
 		finishY = int(self.__viewPortSize[0] * (finishY+1) * (1/2) + self.__viewPortStart[0])
-
 		for x in range(startX, finishX+1):
 			for y in range(startY, finishY+1):
 				isInside = self.glPointInPolygon(self.norX(x), self.norY(y), vertexList)
 				if isInside:
-					self.__image.point(x, y, color)
+					z = self.glPLaneZ(vertexList, self.norX(x), self.norY(y))
+					if z > self.__image.zbuffer[x][y]:
+						self.__image.point(x, y, color)
+						self.__image.zbuffer[x][y] = z
 
 
 	def norX(self, x):
@@ -200,3 +205,25 @@ class SR(object):
 		producto punto
 		"""
 		return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2]
+
+	def cross(self, v0, v1):
+		"""
+		Producto cruz
+		"""
+		return [v0[1] * v1[2] - v0[2] * v1[1], v0[2] * v1[0] - v0[0] * v1[2], v0[0] * v1[1] - v0[1] * v1[0]]
+
+	def vector(self, p, q):
+		"""
+		Vector pq
+		"""
+		return [q[0]-p[0], q[1]-p[1], q[2]-p[2]]
+
+	def glPLaneZ(self, vertexList, x,y):
+		"""
+		Coordenada z en el punto (x,y,z) encontrada en el plano que pasa por los primeros 3 puntos de vertexlist
+		"""
+		pq = self.vector(vertexList[0], vertexList[1])
+		pr = self.vector(vertexList[0], vertexList[2])
+		normal = self.cross(pq, pr)
+		z = ((normal[0]*(x-vertexList[0][0])) + (normal[1]*(y-vertexList[0][1])) - (normal[2]*vertexList[0][2]))/(-normal[2])
+		return z
