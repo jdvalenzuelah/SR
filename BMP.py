@@ -11,7 +11,6 @@ class BMP(object):
 		 	width (int): Ancho de archivo. El valor debe ser mayor que 0.
 		 	height (int): Altura del archivo. El valor debe ser mayor que 0.
 		"""
-
 		def __init__(self, width, height):
 			"""
 			Inicializa valores del archivo en negro
@@ -55,10 +54,11 @@ class BMP(object):
 			if(x < self.width and y < self.height):
 				self.framebuffer[x][y] = color
 
-		def write(self, filename):
+		def write(self, filename, zbuffer=False):
 			"""
 			Escribit el archivo
 			"""
+			BLACK = self.color(0,0,0)
 			file = open(filename, "bw")
 			pWidth =  self.__padding(4, self.width)
 			pHeight = self.__padding(4, self.height)
@@ -87,7 +87,14 @@ class BMP(object):
 			for x in range(pWidth):
 				for y in range(self.height):
 					if(x < self.width and y < self.height):
-						file.write(self.framebuffer[y][x])
+						if zbuffer:
+							if self.zbuffer[y][x] == -float("inf"):
+								file.write(BLACK)
+							else:
+								z = abs(int(self.zbuffer[y][x]*255))
+								file.write(self.color(z,z,z))
+						else:
+							file.write(self.framebuffer[y][x])
 					else:
 						file.write(self.__char("c"))
 

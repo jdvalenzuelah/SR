@@ -227,3 +227,8 @@ class SR(object):
 		normal = self.cross(pq, pr)
 		z = ((normal[0]*(x-vertexList[0][0])) + (normal[1]*(y-vertexList[0][1])) - (normal[2]*vertexList[0][2]))/(-normal[2])
 		return z
+
+	def glRenderZBuffer(self, filename = None):
+		if filename == None:
+			filename = self.__filename.split(".")[0] + "ZBuffer.bmp"
+		self.__image.write(filename, zbuffer = True)

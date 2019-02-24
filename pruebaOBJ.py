@@ -8,3 +8,5 @@ image.glClear()
 image.glFinish()
 image.loadOBJ("cc5.obj", translate=(0,0,0), scale=(0.25,0.25,0.25), fill=True)
 image.glFinish()
+
+image.glRenderZBuffer(filename="zbuffer.bmp")
