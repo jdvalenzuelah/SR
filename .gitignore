@@ -106,3 +106,6 @@ venv.bak/
 #Project files
 *.sublime-workspace
 *.sublime-project
+
+#Test files
+*.bmp
