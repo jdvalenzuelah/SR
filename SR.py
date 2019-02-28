@@ -160,9 +160,9 @@ class SR(object):
 				isInside = self.glPointInPolygon(self.norX(x), self.norY(y), vertexList)
 				if isInside:
 					z = self.glPLaneZ(vertexList, self.norX(x), self.norY(y))
-					if z > self.__image.zbuffer[x][y]:
+					if z > self.__image.getZbufferValue(x,y):
 						self.__image.point(x, y, color)
-						self.__image.zbuffer[x][y] = z
+						self.__image.setZbufferValue(x,y,z)
 
 
 	def norX(self, x):
@@ -225,8 +225,11 @@ class SR(object):
 		pq = self.vector(vertexList[0], vertexList[1])
 		pr = self.vector(vertexList[0], vertexList[2])
 		normal = self.cross(pq, pr)
-		z = ((normal[0]*(x-vertexList[0][0])) + (normal[1]*(y-vertexList[0][1])) - (normal[2]*vertexList[0][2]))/(-normal[2])
-		return z
+		if normal[2]:
+			z = ((normal[0]*(x-vertexList[0][0])) + (normal[1]*(y-vertexList[0][1])) - (normal[2]*vertexList[0][2]))/(-normal[2])
+			return z
+		else:
+			return -float("inf")
 
 	def glRenderZBuffer(self, filename = None):
 		if filename == None:
