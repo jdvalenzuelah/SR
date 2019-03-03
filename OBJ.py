@@ -20,34 +20,33 @@ class OBJ(object):
 		"""
 		file = open(self.__filename, "r")
 		for line in file.readlines():
-			if line[0] == "v" and line[1] == "n":
-				v = line.rstrip().split(" ")
-				v.pop(0)
-				i = 1 if v[0] == "" else 0
-				self.__vertex.append((float(v[i]), float(v[i+1]), float(v[i+2])))
-			elif line[0] == "v" and line[1] == "n":
-				vn = line.strip().split(" ")
-				vn.pop(0)
-				i = 1 if v[0] == "" else 0
-				self.__nvertex.append((float(vn[i]), float(vn[i+1]), float(vn[i+2])))
+			line = line.rstrip().split(" ")
+			if line[0] == "mtllib":
+				mtlFile = MTL(line[1])
+				if mtlFile.isFileOpened():
+					mtlFile.load()
+					self.__materials = mtlFile.materials
+			elif line[0] == "usemtl":
+				if self.__materials:
+					print(self.__materials[line[1]])
+			elif line[0] == "v":
+				line.pop(0)
+				i = 1 if line[0] == "" else 0
+				self.__vertex.append((float(line[i]), float(line[i+1]), float(line[i+2])))
+			elif line[0] == "vn":
+				line.pop(0)
+				i = 1 if line[0] == "" else 0
+				self.__nvertex.append((float(line[i]), float(line[i+1]), float(line[i+2])))
 			elif line[0] == "f":
-				f = line.rstrip().split(" ")
-				f.pop(0)
+				line.pop(0)
 				face = []
-				for i in f:
+				for i in line:
 					i = i.split("/")
 					face.append((int(i[0]), int(i[-1])))
 				self.__faces.append(face)
 				face = []
-			else:
-				line = line.rstrip().split(" ")
-				if line[0] == "mtllib":
-					mtlFile = MTL(line[1].strip())
-					if mtlFile.isFileOpened():
-						mtlFile.load()
-						self.__materials = mtlFile.materials
 
-	def getMaterials(self):
+	def getMaterials(self):		
 		"""
 		"""
 		return self.__materials
@@ -107,7 +106,7 @@ class MTL(object):
 			for line in self.__file.readlines():
 				line = line.split(" ")
 				if line[0] == "newmtl":
-					currentMat = line[1]
+					currentMat = line[1].rstrip()
 				elif line[0] == "Ka":
 					ac = (float(line[1]), float(line[2]), float(line[3]))
 				elif line[0] == "Kd":
@@ -125,7 +124,9 @@ class MTL(object):
 				elif line[0] == "Ni":
 					o = float(line[1])
 				elif currentMat:
-					self.materials[currentMat.rstrip()] = Material(currentMat.rstrip(), ac, dc, sc, ec, t, s, i, o)	
+					self.materials[currentMat] = Material(currentMat, ac, dc, sc, ec, t, s, i, o)	
+			if currentMat not in self.materials.keys():
+				self.materials[currentMat] = Material(currentMat, ac, dc, sc, ec, t, s, i, o)	
 
 class Material(object):
 	"""
