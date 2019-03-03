@@ -109,4 +109,4 @@ venv.bak/
 
 #Test files
 *.bmp
-*.obj
+testFiles/
