@@ -1,1 +1,1 @@
-Correr programa tarea 1, imagenes por cada item seran escritas en la misma carpeta.
+Correr programa pruebaOBJ.py, imagenes por cada item (Modelo OBJ y zbuffer) seran escritas en la misma carpeta.

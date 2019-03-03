@@ -200,6 +200,7 @@ class SR(object):
 			return False
 		else:
 			return True
+			
 	def dot(self, v0, v1):
 		"""
 		producto punto
