@@ -61,6 +61,8 @@ class BMP(object):
 			Escribit el archivo
 			"""
 			BLACK = self.color(0,0,0)
+			import os
+			os.makedirs(os.path.dirname(filename), exist_ok=True)
 			file = open(filename, "bw")
 			pWidth =  self.__padding(4, self.width)
 			pHeight = self.__padding(4, self.height)

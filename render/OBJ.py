@@ -13,22 +13,38 @@ class OBJ(object):
 		self.__nvertex = []
 		self.__filename = filename
 		self.__materials = None
+		self.__materialFaces = []
 
 	def load(self):
 		"""
 		Loads the objfile
 		"""
 		file = open(self.__filename, "r")
-		for line in file.readlines():
+		import os
+		faces = []
+		currentMat, previousMat = "default", "default"
+		faceCounter = 0
+		matIndex = []
+		lines = file.readlines()
+		last = lines[-1]
+		for line in lines:
 			line = line.rstrip().split(" ")
 			if line[0] == "mtllib":
-				mtlFile = MTL(line[1])
+				mtlFile = MTL(os.path.dirname(file.name) + "/" + line[1])
 				if mtlFile.isFileOpened():
 					mtlFile.load()
+					#self.__faces = {}
 					self.__materials = mtlFile.materials
+				else:
+					self.__faces = []
 			elif line[0] == "usemtl":
 				if self.__materials:
-					print(self.__materials[line[1]])
+					matIndex.append(faceCounter)
+					previousMat = currentMat
+					currentMat = line[1]
+					if len(matIndex) == 2:
+						self.__materialFaces.append((matIndex, previousMat))
+						matIndex= [matIndex[1]+1]
 			elif line[0] == "v":
 				line.pop(0)
 				i = 1 if line[0] == "" else 0
@@ -44,7 +60,13 @@ class OBJ(object):
 					i = i.split("/")
 					face.append((int(i[0]), int(i[-1])))
 				self.__faces.append(face)
+				faceCounter += 1
 				face = []
+		if len(matIndex) < 2 and self.__materials:
+			matIndex.append(faceCounter)
+			self.__materialFaces.append((matIndex, currentMat))
+			matIndex= [matIndex[1]+1]
+		file.close()
 
 	def getMaterials(self):		
 		"""
@@ -68,6 +90,11 @@ class OBJ(object):
 		vertex normal getter
 		"""
 		return self.__nvertex
+
+	def getMaterialFaces(self):
+		"""
+		"""
+		return self.__materialFaces
 
 class MTL(object):
 	"""

@@ -110,20 +110,44 @@ class SR(object):
 		vertex = obj.getVertexList()
 		faces = obj.getFaceList()
 		nvertex = obj.getVertexNormalList()
+		materials = obj.getMaterials()
 		light = (0,0,1)
-		for face in faces:
-			cooList = []
-			for vertexN in face:
-				coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
-				cooList.append(coo)
-				intensity = self.dot(nvertex[vertexN[1]-1], light)
-			if intensity < 0:
-				continue
-			if fill:
-				self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
-			else:
-				self.glPolygon(cooList)
-			cooList = []
+		faceCounter = 0
+		ambientColor = (1,1,1)
+		cont = 0
+		if materials:
+			matIndex = obj.getMaterialFaces()
+			for mat in matIndex:
+				ambientColor = materials[mat[1]].ambientColor
+				for i in range(mat[0][0], mat[0][1]):
+					cooList = []
+					cont += 1
+					for face in faces[i]:
+						coo = ((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
+						cooList.append(coo)
+						intensity = self.dot(nvertex[face[1]-1], light)
+					if intensity < 0:
+						continue
+					if fill:
+						self.glFilledPolygon(cooList, color=(intensity*ambientColor[0],intensity*ambientColor[1],intensity*ambientColor[2]))
+					else:
+						self.glPolygon(cooList)
+		else:
+			for face in faces:
+				cooList = []
+				for vertexN in face:
+					coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
+					cooList.append(coo)
+					intensity = self.dot(nvertex[vertexN[1]-1], light)
+					print(intensity*255)
+				if intensity < 0:
+					continue
+				if fill:
+					self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
+				else:
+					self.glPolygon(cooList)
+				cooList = []
+
 
 	def glPolygon(self, vertexList):
 		"""
