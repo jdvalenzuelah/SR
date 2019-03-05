@@ -112,16 +112,12 @@ class SR(object):
 		nvertex = obj.getVertexNormalList()
 		materials = obj.getMaterials()
 		light = (0,0,1)
-		faceCounter = 0
-		ambientColor = (1,1,1)
-		cont = 0
 		if materials:
 			matIndex = obj.getMaterialFaces()
 			for mat in matIndex:
-				ambientColor = materials[mat[1]].ambientColor
+				difuseColor = materials[mat[1]].difuseColor
 				for i in range(mat[0][0], mat[0][1]):
 					cooList = []
-					cont += 1
 					for face in faces[i]:
 						coo = ((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
 						cooList.append(coo)
@@ -129,7 +125,7 @@ class SR(object):
 					if intensity < 0:
 						continue
 					if fill:
-						self.glFilledPolygon(cooList, color=(intensity*ambientColor[0],intensity*ambientColor[1],intensity*ambientColor[2]))
+						self.glFilledPolygon(cooList, color=(intensity*difuseColor[0],intensity*difuseColor[1],intensity*difuseColor[2]))
 					else:
 						self.glPolygon(cooList)
 		else:
