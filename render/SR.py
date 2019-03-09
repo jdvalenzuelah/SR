@@ -15,6 +15,7 @@ class SR(object):
 		self.__viewPortSize = (0,0)
 		self.__color = self.__image.color(255,255,255)
 		self.__filename = "output.bmp"
+		self.__obj = None
 
 	def glCreateWindow(self, width, height):
 		"""
@@ -105,44 +106,97 @@ class SR(object):
 		"""
 		cargar OBJ file, wireframe
 		"""
-		obj = OBJ(filename)
-		obj.load()
-		vertex = obj.getVertexList()
-		faces = obj.getFaceList()
-		nvertex = obj.getVertexNormalList()
-		materials = obj.getMaterials()
+		self.__obj = OBJ(filename)
+		self.__obj.load()
+		vertex = self.__obj.getVertexList()
+		faces = self.__obj.getFaceList()
+		nvertex = self.__obj.getVertexNormalList()
+		materials = self.__obj.getMaterials()
+		tvertex = self.__obj.getTextureVertex()
 		light = (0,0,1)
 		if materials:
-			matIndex = obj.getMaterialFaces()
+			matIndex = self.__obj.getMaterialFaces()
 			for mat in matIndex:
 				difuseColor = materials[mat[1]].difuseColor
 				for i in range(mat[0][0], mat[0][1]):
 					cooList = []
+					textCoo = []
 					for face in faces[i]:
 						coo = ((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
 						cooList.append(coo)
-						intensity = self.dot(nvertex[face[1]-1], light)
-					if intensity < 0:
-						continue
 					if fill:
+						intensity = self.dot(nvertex[face[1]-1], light)
+						if intensity < 0:
+							continue
 						self.glFilledPolygon(cooList, color=(intensity*difuseColor[0],intensity*difuseColor[1],intensity*difuseColor[2]))
 					else:
 						self.glPolygon(cooList)
 		else:
 			for face in faces:
 				cooList = []
+				textCoo = []
 				for vertexN in face:
 					coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
 					cooList.append(coo)
-					intensity = self.dot(nvertex[vertexN[1]-1], light)
-					print(intensity*255)
-				if intensity < 0:
-					continue
 				if fill:
+					intensity = self.dot(nvertex[vertexN[1]-1], light)
+					if intensity < 0:
+						continue
 					self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
 				else:
 					self.glPolygon(cooList)
 				cooList = []
+
+	def glRenderTextureGrid(self, filename=None, newfile=True, translate=(0, 0), scale=(1, 1)):
+		"""
+		"""
+		if self.__obj:
+
+			faces = self.__obj.getFaceList()
+			materials = self.__obj.getMaterials()
+			tvertex = self.__obj.getTextureVertex()
+
+			if newfile and filename:
+				canvas = SR()
+				canvas.glInit()
+				canvas.glCreateWindow(self.__image.width, self.__image.height)
+				canvas.glViewPort(self.__viewPortStart[0], self.__viewPortStart[1], self.__viewPortSize[0], self.__viewPortSize[1])
+				canvas.setFileName(filename)
+			else:
+				canvas = self
+
+			if materials:
+				matIndex = self.__obj.getMaterialFaces()
+				for mat in matIndex:
+					difuseColor = materials[mat[1]].difuseColor
+					for i in range(mat[0][0], mat[0][1]):
+						textCoo = []
+						for face in faces[i]:
+							if len(face) > 2:
+								text = ((tvertex[face[2]-1][0]+ translate[0]) * scale[0], (tvertex[face[2]-1][1]+ translate[1]) * scale[1])
+								textCoo.append(text)
+							if len(textCoo)>1:
+								canvas.glPolygon(textCoo)
+			else:
+				for face in faces:
+					textCoo = []
+					for vertexN in face:
+						if len(vertexN) > 2:
+							text = ((tvertex[vertexN[2]-1][0]+ translate[0]) * scale[0], (tvertex[vertexN[2]-1][1]+ translate[1]) * scale[1])
+							textCoo.append(text)
+						if len(textCoo)>1:
+							canvas.glPolygon(textCoo)
+			return canvas
+
+
+
+
+		"""
+		if len(face) > 2:
+			textCoo.append(tvertex[face[2]-1])
+		if len(textCoo)>1:
+			self.glPolygon(textCoo)
+		"""
 
 
 	def glPolygon(self, vertexList):
@@ -253,6 +307,8 @@ class SR(object):
 			return -float("inf")
 
 	def glRenderZBuffer(self, filename = None):
+		"""
+		"""
 		if filename == None:
 			filename = self.__filename.split(".")[0] + "ZBuffer.bmp"
 		self.__image.write(filename, zbuffer = True)

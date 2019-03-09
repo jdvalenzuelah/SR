@@ -14,6 +14,7 @@ class OBJ(object):
 		self.__filename = filename
 		self.__materials = None
 		self.__materialFaces = []
+		self.__tvertex = []
 
 	def load(self):
 		"""
@@ -58,15 +59,22 @@ class OBJ(object):
 				face = []
 				for i in line:
 					i = i.split("/")
-					face.append((int(i[0]), int(i[-1])))
+					if i[1] == "":
+						face.append((int(i[0]), int(i[-1])))
+					else:
+						face.append((int(i[0]), int(i[-1]), int(i[1])))
 				self.__faces.append(face)
 				faceCounter += 1
 				face = []
+			elif line[0] == "vt":
+				line.pop(0)
+				self.__tvertex.append((float(line[0]), float(line[1])))
 		if len(matIndex) < 2 and self.__materials:
 			matIndex.append(faceCounter)
 			self.__materialFaces.append((matIndex, currentMat))
 			matIndex= [matIndex[1]+1]
 		file.close()
+		#print(self.__faces)
 
 	def getMaterials(self):		
 		"""
@@ -95,6 +103,9 @@ class OBJ(object):
 		"""
 		"""
 		return self.__materialFaces
+
+	def getTextureVertex(self):
+		return self.__tvertex
 
 class MTL(object):
 	"""

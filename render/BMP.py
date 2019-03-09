@@ -53,8 +53,6 @@ class BMP(object):
 			"""
 			if(x < self.width and y < self.height):
 				self.framebuffer[x][y] = color
-			else:
-				print("BMP index out of bounds")
 
 		def write(self, filename, zbuffer=False):
 			"""
@@ -140,7 +138,6 @@ class BMP(object):
 			if x < self.width and y < self.height:
 				return self.zbuffer[x][y]
 			else:
-				print("Zbuffer index out of bounds")
 				return -float("inf")
 
 		def setZbufferValue(self, x, y, z):
@@ -151,5 +148,4 @@ class BMP(object):
 				self.zbuffer[x][y] = z
 				return 1
 			else:
-				print("Zbuffer index out of bounds")
 				return 0
