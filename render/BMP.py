@@ -102,6 +102,23 @@ class BMP(object):
 
 			file.close()
 
+		def load(self, filename):
+			file = open(filename, "rb")
+			file.seek(10)
+			headerSize = struct.unpack("=l", file.read(4))[0]
+			file.seek(18)
+
+			self.width = struct.unpack("=l", file.read(4))[0]
+			self.height = struct.unpack("=l", file.read(4))[0]
+			self.clear()
+
+			for y in range(self.height):
+				for x in range(self.width):
+					b, g, r = ord(file.read(1)), ord(file.read(1)), ord(file.read(1))
+					self.point(x, y, self.color(r,g,b))
+			file.close()
+
+
 		def __padding(self, base, c):
 			"""
 			Agregar pading a un numero

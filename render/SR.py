@@ -1,8 +1,10 @@
 #Universidad del Valle de Guatemala
 #Josue Valenzuela 171001
 #Loacal path> C:\Users\daval\Desktop\UVG\A3\C1\Graficas\Tareas con SR\SR
+from Render.Texture import Texture
 from Render.BMP import BMP
 from Render.OBJ import OBJ
+
 
 class SR(object):
 
@@ -16,6 +18,7 @@ class SR(object):
 		self.__color = self.__image.color(255,255,255)
 		self.__filename = "output.bmp"
 		self.__obj = None
+		self.__text = None
 
 	def glCreateWindow(self, width, height):
 		"""
@@ -102,7 +105,7 @@ class SR(object):
 		"""
 		self.__filename = filename
 
-	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True):
+	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True, textured=None):
 		"""
 		cargar OBJ file, wireframe
 		"""
@@ -114,7 +117,7 @@ class SR(object):
 		materials = self.__obj.getMaterials()
 		tvertex = self.__obj.getTextureVertex()
 		light = (0,0,1)
-		if materials:
+		if materials and not textured:
 			matIndex = self.__obj.getMaterialFaces()
 			for mat in matIndex:
 				difuseColor = materials[mat[1]].difuseColor
@@ -125,12 +128,30 @@ class SR(object):
 						coo = ((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
 						cooList.append(coo)
 					if fill:
-						intensity = self.dot(nvertex[face[1]-1], light)
-						if intensity < 0:
+						inten = self.dot(nvertex[face[1]-1], light)
+						if inten < 0:
 							continue
-						self.glFilledPolygon(cooList, color=(intensity*difuseColor[0],intensity*difuseColor[1],intensity*difuseColor[2]))
+						self.glFilledPolygon(cooList, color=(inten*difuseColor[0],inten*difuseColor[1],inten*difuseColor[2]))
 					else:
 						self.glPolygon(cooList)
+		elif textured and not materials:
+			for face in faces:
+				cooList = []
+				textCoo = []
+				for vertexN in face:
+					coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
+					cooList.append(coo)
+					if len(vertexN) > 2:
+						text = ((tvertex[vertexN[2]-1][0]+ translate[0]) * scale[0], (tvertex[vertexN[2]-1][1]+ translate[1]) * scale[1])
+						textCoo.append(text)
+				if fill:
+					inten = self.dot(nvertex[vertexN[1]-1], light)
+					if inten < 0:
+						continue
+					self.glFilledPolygon(cooList, intensity=inten, texture=textured, textureCoords=textCoo)
+				else:
+					self.glPolygon(cooList)
+				cooList = []
 		else:
 			for face in faces:
 				cooList = []
@@ -139,10 +160,10 @@ class SR(object):
 					coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
 					cooList.append(coo)
 				if fill:
-					intensity = self.dot(nvertex[vertexN[1]-1], light)
-					if intensity < 0:
+					inten = self.dot(nvertex[vertexN[1]-1], light)
+					if inten < 0:
 						continue
-					self.glFilledPolygon(cooList, color=(intensity,intensity,intensity))
+					self.glFilledPolygon(cooList, color=(inten,inten,inten))
 				else:
 					self.glPolygon(cooList)
 				cooList = []
@@ -212,11 +233,19 @@ class SR(object):
 				fi = vertexList[i+1]
 			self.glLine(st[0], st[1], fi[0], fi[1])
 
-	def glFilledPolygon(self, vertexList, color=None):
+	def glFilledPolygon(self, vertexList, color=None, texture=None, intensity=1, textureCoords = (), zVal=True):
 		"""
 		Poligono relleno de fillcolor
 		"""
-		color = self.__color if color == None else self.__image.color(int(255*color[0]), int(255*color[1]), int(255*color[2]))
+		inten = intensity
+		if not texture:
+			color = self.__color if color == None else self.__image.color(int(255*color[0]), int(255*color[1]), int(255*color[2]))
+		else:
+			if self.__text == None:
+				text = Texture(texture)
+				self.__text = text
+			else:
+				text = self.__text
 
 		startX = sorted(vertexList, key=lambda tup: tup[0])[0][0]
 		finishX = sorted(vertexList, key=lambda tup: tup[0], reverse = True)[0][0]
@@ -233,12 +262,33 @@ class SR(object):
 			for y in range(startY, finishY+1):
 				isInside = self.glPointInPolygon(self.norX(x), self.norY(y), vertexList)
 				if isInside:
-					z = self.glPLaneZ(vertexList, self.norX(x), self.norY(y))
+					if texture:
+						A = (self.norInvX(vertexList[0][0]), self.norInvX(vertexList[0][1]))
+						B = (self.norInvX(vertexList[1][0]), self.norInvX(vertexList[1][1]))
+						C = (self.norInvX(vertexList[2][0]), self.norInvX(vertexList[2][1]))
+						w,v,u = self.barycentric(A, B, C, x, y)
+						A = textureCoords[0]
+						B = textureCoords[1]
+						C = textureCoords[2]
+						tx = A[0] * w + B[0] * v +  C[0] * u
+						ty = A[1] * w + B[1] * v + C[1] * u
+						color = text.getColor(tx, ty, intensity=inten)
+					z = self.glPLaneZ(vertexList, x, y)
 					if z > self.__image.getZbufferValue(x,y):
 						self.__image.point(x, y, color)
 						self.__image.setZbufferValue(x,y,z)
 
+	def barycentric(self, A, B, C, x, y):
+		"""
+		"""
+		v1 = (C[0]-A[0], B[0]-A[0],A[0]-x)
+		v2 = (C[1]-A[1], B[1]-A[1],A[1]-y)		
+		bary = self.cross(v1, v2)	
+		if abs(bary[2])<1:
+			return -1,-1,-1
 
+		return ( 1 - (bary[0] + bary[1]) / bary[2], bary[1] / bary[2], bary[0] / bary[2])
+	
 	def norX(self, x):
 		"""
 		Normalizar coor
@@ -251,6 +301,18 @@ class SR(object):
 		Normalizar coor
 		"""
 		norY = ((2*y)/self.__viewPortSize[1]) - self.__viewPortStart[1] - 1
+		return norY
+
+	def norInvX(self, x):
+		"""
+		"""
+		norX = int(self.__viewPortSize[0] * (x+1) * (1/2) + self.__viewPortStart[0])
+		return norX
+
+	def norInvY(self, y):
+		"""
+		"""
+		norY = int(self.__viewPortSize[0] * (y+1) * (1/2) + self.__viewPortStart[0])
 		return norY
 
 	def glPointInPolygon(self,x, y, vertexList):

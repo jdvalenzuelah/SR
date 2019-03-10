@@ -1,4 +1,3 @@
-
 class OBJ(object):
 	"""
 	Class representing an .obj file
