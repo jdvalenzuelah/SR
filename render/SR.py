@@ -4,6 +4,7 @@
 from Render.Texture import Texture
 from Render.BMP import BMP
 from Render.OBJ import OBJ
+from random import random
 
 
 class SR(object):
@@ -194,18 +195,18 @@ class SR(object):
 						textCoo = []
 						for face in faces[i]:
 							if len(face) > 2:
-								text = ((tvertex[face[2]-1][0]+ translate[0]) * scale[0], (tvertex[face[2]-1][1]+ translate[1]) * scale[1])
+								text = ((tvertex[face[2]-1][0]+ translate[0]) * scale[0], (tvertex[face[2]-1][1]+ translate[1]) * scale[1], 0)
 								textCoo.append(text)
-							if len(textCoo)>1:
+							if len(textCoo)>2:
 								canvas.glPolygon(textCoo)
 			else:
 				for face in faces:
 					textCoo = []
 					for vertexN in face:
 						if len(vertexN) > 2:
-							text = ((tvertex[vertexN[2]-1][0]+ translate[0]) * scale[0], (tvertex[vertexN[2]-1][1]+ translate[1]) * scale[1])
+							text = ((tvertex[vertexN[2]-1][0]+ translate[0]) * scale[0], (tvertex[vertexN[2]-1][1]+ translate[1]) * scale[1],0)
 							textCoo.append(text)
-						if len(textCoo)>1:
+						if len(textCoo)>2:
 							canvas.glPolygon(textCoo)
 			return canvas
 

@@ -73,27 +73,9 @@ def generateText():
 				image.glColor(random(), random(), random())
 			for y in range(512*i,512*(i+1)):
 				image.glVertex(image.norX(x), image.norY(y))
-	
-
 	image.glFinish()
 
 
 
 if __name__ == "__main__":
-	args = sys.argv[1] if len(sys.argv) > 1 else ""
-	if args == "bb8":
-		bb8()
-	elif args == "face":
-		face()
-	elif args == "text":
-		testText()
-	elif args == "face2":
-		face2()
-	elif args == "bary":
-		print(testBary())
-	elif args == "ico":
-		ico()
-	elif args == "gen":
-		generateText()
-	else:
-		print("invalid args")
+	ico()
