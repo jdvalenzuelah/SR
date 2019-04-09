@@ -1,6 +1,7 @@
 #Universidad del Valle de Guatemala
 #Josue Valenzuela 171001
 #Loacal path> C:\Users\daval\Desktop\UVG\A3\C1\Graficas\Tareas con SR\SR
+# -*- coding: utf-8 -*-
 from Render.BMP import BMP
 from Render.OBJ import OBJ
 
