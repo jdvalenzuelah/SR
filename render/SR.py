@@ -4,8 +4,8 @@
 # -*- coding: utf-8 -*-
 from Render.BMP import BMP
 from Render.OBJ import OBJ
-from random import random
 from Render.Texture import Texture
+from math import cos, sin
 
 
 class SR(object):
@@ -21,6 +21,9 @@ class SR(object):
 		self.__filename = "output.bmp"
 		self.__obj = None
 		self.__text = None
+
+	def setImage(self, bmp):
+		self.__image = bmp
 
 	def glCreateWindow(self, width, height):
 		"""
@@ -61,6 +64,7 @@ class SR(object):
 		Cambia el color predeterminado.
 		"""
 		self.__color = self.__image.color(int(255*r), int(255*g), int(255*b))
+		return self.__image.color(int(255*r), int(255*g), int(255*b))
 
 	def glFinish(self):
 		"""
@@ -107,10 +111,100 @@ class SR(object):
 		"""
 		self.__filename = filename
 
-	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True, textured=None):
+	def loadOBJ(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True, textured=None, rotate=(0, 0, 0)):
+		"""
+		Loads .obj file
+		"""
+		self.modelMatrix(translate, scale, rotate)
+		self.__obj = OBJ(filename)
+		self.__obj.load()
+		light = self.norm((0,0,1))
+		faces = self.__obj.getFaceList()
+		vertex = self.__obj.getVertexList()
+		materials = self.__obj.getMaterials()
+		tvertex = self.__obj.getTextureVertex()
+		nvertex = self.__obj.getVertexNormalList()
+
+		for face in faces:
+
+			vcount = len(face)
+
+			if vcount == 3:
+				f1 = face[0][0] - 1
+				f2 = face[1][0] - 1
+				f3 = face[2][0] - 1
+
+				a = self.transform(vertex[f1])
+				b = self.transform(vertex[f2])
+				c = self.transform(vertex[f3])
+
+				normal = self.norm(self.cross(self.sub(b,a), self.sub(c,a)))
+				intensity = self.dot(normal, light)
+
+				if not textured:
+					if intensity < 0:
+						continue
+					self.triangle(a, b, c,color=self.glColor(intensity, intensity, intensity))
+			else:
+				f1 = face[0][0] - 1
+				f2 = face[1][0] - 1
+				f3 = face[2][0] - 1
+				f4 = face[3][0] - 1
+
+				vertexList = [
+					self.transform(vertex[f1]),
+					self.transform(vertex[f2]),
+					self.transform(vertex[f3]),
+					self.transform(vertex[f4])
+				]
+				normal = self.norm(self.cross(self.sub(vertexList[0], vertexList[1]), self.sub(vertexList[1], vertexList[2]))) 
+				intensity = self.dot(normal, light)
+				A, B, C, D = vertexList
+				if not textured:
+					if intensity < 0:
+						continue
+					self.triangle(A, B, C, color=self.glColor(intensity, intensity, intensity))
+					self.triangle(A, C, D, color=self.glColor(intensity, intensity, intensity))
+
+	def triangle(self, A, B, C, color=None, texture=None, texture_coords=(), intensity=1):
+		"""
+		Draws a triangle ABC
+		"""
+		bbox_min, bbox_max = self.bbox(A, B, C)
+
+		for x in range(bbox_min[0], bbox_max[0] + 1):
+			for y in range(bbox_min[1], bbox_max[1] + 1):
+				w, v, u = self.barycentric(A, B, C, x, y)
+				if w < 0 or v < 0 or u < 0:
+					continue
+				if texture:
+					tA, tB, tC = texture_coords
+					tx = tA[0] * w + tB[0] * v + tC[0] * u
+					ty = tA[2] * w + tB[2] * v + tC[2] * u
+					color = texture.getColor(tx, ty, intensity)
+				z = A[2] * w + B[2] * v + C[2] * u
+				if x<0 or y<0:
+					continue
+				if z > self.__image.getZbufferValue(x,y):
+					self.__image.point(x, y, color)
+					self.__image.setZbufferValue(x,y,z)
+
+
+	def bbox(self, *vertexList):
+		"""
+		Smallest possible bounding box
+		"""
+		xs = [vertex[0] for vertex in vertexList]
+		ys = [vertex[1] for vertex in vertexList]
+		xs.sort()
+		ys.sort()
+		return (xs[0], ys[0]), (xs[-1], ys[-1])
+
+	def load(self, filename, translate=(0, 0, 0), scale=(1, 1, 1), fill=True, textured=None, rotate=(0, 0, 0)):
 		"""
 		cargar OBJ file, wireframe
 		"""
+		self.modelMatrix(translate, scale, rotate)
 		self.__obj = OBJ(filename)
 		self.__obj.load()
 		vertex = self.__obj.getVertexList()
@@ -127,7 +221,8 @@ class SR(object):
 					cooList = []
 					textCoo = []
 					for face in faces[i]:
-						coo = ((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
+						coo = self.transform(vertex[face[0]-1]) #((vertex[face[0]-1][0] + translate[0]) * scale[0], (vertex[face[0]-1][1] + translate[1]) * scale[1], (vertex[face[0]-1][2] + translate[2]) * scale[2])
+						print(self.transform(vertex[face[0]-1]))
 						cooList.append(coo)
 					if fill:
 						inten = self.dot(nvertex[face[1]-1], light)
@@ -159,7 +254,8 @@ class SR(object):
 				cooList = []
 				textCoo = []
 				for vertexN in face:
-					coo = ((vertex[vertexN[0]-1][0] + translate[0]) * scale[0], (vertex[vertexN[0]-1][1] + translate[1]) * scale[1], (vertex[vertexN[0]-1][2] + translate[2]) * scale[2])
+					coo = vertex[vertexN[0]-1] #self.transform(vertex[vertexN[0]-1])
+					print(coo)
 					cooList.append(coo)
 				if fill:
 					inten = self.dot(nvertex[vertexN[1]-1], light)
@@ -172,6 +268,7 @@ class SR(object):
 
 	def glRenderTextureGrid(self, filename=None, newfile=True, translate=(0, 0), scale=(1, 1)):
 		"""
+		Render the grid of the textured
 		"""
 		if self.__obj:
 
@@ -212,16 +309,6 @@ class SR(object):
 			return canvas
 
 
-
-
-		"""
-		if len(face) > 2:
-			textCoo.append(tvertex[face[2]-1])
-		if len(textCoo)>1:
-			self.glPolygon(textCoo)
-		"""
-
-
 	def glPolygon(self, vertexList):
 		"""
 		poligono
@@ -248,13 +335,12 @@ class SR(object):
 				self.__text = text
 			else:
 				text = self.__text
+		startX = (sorted(vertexList, key=lambda tup: tup[0])[0][0])
+		finishX = (sorted(vertexList, key=lambda tup: tup[0], reverse = True)[0][0])
 
-		startX = sorted(vertexList, key=lambda tup: tup[0])[0][0]
-		finishX = sorted(vertexList, key=lambda tup: tup[0], reverse = True)[0][0]
-
-		startY = sorted(vertexList, key=lambda tup: tup[1])[0][1]
-		finishY = sorted(vertexList, key=lambda tup: tup[1], reverse=True)[0][1]
-
+		startY = (sorted(vertexList, key=lambda tup: tup[1])[0][1])
+		finishY = (sorted(vertexList, key=lambda tup: tup[1], reverse=True)[0][1])
+		
 		startX = int(self.__viewPortSize[0] * (startX+1) * (1/2) + self.__viewPortStart[0])
 		finishX = int(self.__viewPortSize[0] * (finishX+1) * (1/2) + self.__viewPortStart[0])
 
@@ -282,6 +368,7 @@ class SR(object):
 
 	def barycentric(self, A, B, C, x, y):
 		"""
+		Get barycentric coordenates
 		"""
 		v1 = (C[0]-A[0], B[0]-A[0],A[0]-x)
 		v2 = (C[1]-A[1], B[1]-A[1],A[1]-y)		
@@ -316,6 +403,15 @@ class SR(object):
 		"""
 		norY = int(self.__viewPortSize[0] * (y+1) * (1/2) + self.__viewPortStart[0])
 		return norY
+
+	def norm(self, v0):
+		v = self.length(v0)
+		if not v:
+			return [0,0,0]
+		return [v0[0]/v, v0[1]/v, v0[2]/v]
+
+	def length(self, v0):
+		return (v0[0]**2 + v0[1]**2 + v0[2]**2)**0.5
 
 	def glPointInPolygon(self,x, y, vertexList):
 		"""
@@ -357,6 +453,9 @@ class SR(object):
 		"""
 		return [q[0]-p[0], q[1]-p[1], q[2]-p[2]]
 
+	def sub(self, v0, v1):
+		return [v0[0] - v1[0], v0[1] - v1[1], v0[2] - v1[2]]
+
 	def glPLaneZ(self, vertexList, x,y):
 		"""
 		Coordenada z en el punto (x,y,z) encontrada en el plano que pasa por los primeros 3 puntos de vertexlist
@@ -372,7 +471,114 @@ class SR(object):
 
 	def glRenderZBuffer(self, filename = None):
 		"""
+		Renders the z buffer stored
 		"""
 		if filename == None:
 			filename = self.__filename.split(".")[0] + "ZBuffer.bmp"
 		self.__image.write(filename, zbuffer = True)
+
+	def matMult(self, m1,m2):
+		if len(m1[0]) == len(m2):
+			filas1 = len(m1)
+			col1 = len(m1[0])
+			filas2 = len(m2)
+			col2 = len(m2[0])
+			matResult = []
+			for i in range(filas1):
+				matResult.append([0] * col2)
+			for i in range(filas1):
+				for j in range(col2):
+					for k in range(col1):
+						matResult[i][j] = m1[i][k] * m2[k][j]
+			return matResult
+		else:
+			print("Error " + str(len(m1[0])) + " and " +str(len(m2)))
+			return 0
+
+	def modelMatrix(self, translate=(0, 0, 0), scale=(1, 1, 1), rotate=(0, 0, 0)):
+		"""
+		Generates model matrix
+		"""
+		translation_matrix = Matrix([[1, 0, 0, translate[0]],[0, 1, 0, translate[1]],[0, 0, 1, translate[2]],[0, 0, 0, 1],])
+		a = rotate[0]
+		rotation_matrix_x = Matrix([[1, 0, 0, 0],[0, cos(a), -sin(a), 0],[0, sin(a),  cos(a), 0],[0, 0, 0, 1]])
+		a = rotate[1]
+		rotation_matrix_y = Matrix([[cos(a), 0,  sin(a), 0],[     0, 1,       0, 0],[-sin(a), 0,  cos(a), 0],[     0, 0,       0, 1]])
+		a = rotate[2]
+		rotation_matrix_z = Matrix([[cos(a), -sin(a), 0, 0],[sin(a),  cos(a), 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]])
+		rotation_matrix = rotation_matrix_x * rotation_matrix_y * rotation_matrix_z
+		scale_matrix = Matrix([[scale[0], 0, 0, 0],[0, scale[1], 0, 0],[0, 0, scale[2], 0],[0, 0, 0, 1],])
+		self.Model = translation_matrix * rotation_matrix * scale_matrix
+
+	def viewMatrix(self, x, y, z, center):
+		"""
+		Generates view matrix
+		"""
+		m = Matrix([[x[0], x[1], x[2],  0],[y[0], y[1], y[2], 0],[z[0], z[1], z[2], 0],[0,0,0,1]])
+		o = Matrix([[1, 0, 0, -center[0]],[0, 1, 0, -center[1]],[0, 0, 1, -center[2]],[0, 0, 0, 1]])
+		self.View = m * o
+
+	def projectionMatrix(self, coeff):
+		"""
+		Generates projection matrix
+		"""
+		self.Projection = Matrix([[1, 0, 0, 0],[0, 1, 0, 0],[0, 0, 1, 0],[0, 0, coeff, 1]])
+
+	def viewportMatrix(self, x=0, y =0):
+		"""
+		Generates viewport matrix
+		"""
+		self.Viewport =  Matrix([[self.__image.width/2, 0, 0, x + self.__image.width/2],[0, self.__image.height/2, 0, y + self.__image.height/2],[0, 0, 128, 128],[0, 0, 0, 1]])
+
+	def lookAt(self, eye, center, up):
+		"""
+		Defines the position of the camera
+		"""
+		z = self.norm(self.sub(eye, center))
+		x = self.norm(self.cross(up, z))
+		y = self.norm(self.cross(z,x))
+		self.viewMatrix(x, y, z, center)
+		self.projectionMatrix(-1/self.length(self.sub(eye, center)))
+		self.viewportMatrix()
+
+	def transform(self, vertex):
+		agv = Matrix([[vertex[0]],[vertex[1]],[vertex[2]],[1]])
+		transformed_vertex = self.Viewport * self.Projection * self.View * self.Model * agv
+		transformed_vertex = transformed_vertex.tolist()
+		tra = [round(transformed_vertex[0][0]/transformed_vertex[3][0]), round(transformed_vertex[1][0]/transformed_vertex[3][0]), round(transformed_vertex[2][0]/transformed_vertex[3][0])]
+		return tra
+
+class Matrix(object):
+	"""
+	Helper class representing a Matrix
+	"""
+	def __init__(self, data):
+		"""
+		Data must be a multidimensional list
+		"""
+		self.data = data
+		self.row = len(data)
+		self.col = len(data[0])
+
+	def __mul__(self, m2):
+		"""
+		commun linealg matrix multiplicacion
+		"""
+		result = []
+		for i in range(self.row):
+			result.append([])
+			for j in range(m2.col):
+				result[-1].append(0)
+
+		for i in range(self.row):
+			for j in range(m2.col):
+				for k in range(m2.row):
+					result[i][j] += self.data[i][k] * m2.data[k][j]
+
+		return Matrix(result)
+
+	def tolist(self):
+		"""
+		returns multidimensional list with the data
+		"""
+		return self.data

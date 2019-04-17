@@ -111,11 +111,11 @@ class BMP(object):
 			self.width = struct.unpack("=l", file.read(4))[0]
 			self.height = struct.unpack("=l", file.read(4))[0]
 			self.clear()
-
 			for y in range(self.height):
 				for x in range(self.width):
-					b, g, r = ord(file.read(1)), ord(file.read(1)), ord(file.read(1))
-					self.point(x, y, self.color(r,g,b))
+					if x < self.width and y < self.height:
+						b, g, r = ord(file.read(1)), ord(file.read(1)), ord(file.read(1))
+						self.point(x, y, self.color(r,g,b))
 			file.close()
 
 
