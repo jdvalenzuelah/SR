@@ -18,11 +18,11 @@ def bb8():
 def ico():
 	image = SR()
 	image.glInit()
+	image.lookAt((1,3,5), (0,0,0), (0,1,0))
 	image.glCreateWindow(800, 800)
 	image.glViewPort(0,0,800,800)
 	image.setFileName("./testResults/ico.bmp")
 	image.loadOBJ("./models/test.obj", translate=(0,-0.25,0), scale=(0.47,0.47,0.47), fill=True, textured="./models/text.bmp")
-	image.glRenderTextureGrid(filename="./testResults/icoText.bmp").glFinish()
 	image.glFinish()
 
 def earth():
@@ -30,8 +30,9 @@ def earth():
 	image.glInit()
 	image.glCreateWindow(800, 800)
 	image.glViewPort(0,0,800,800)
+	image.lookAt((-1,3,5), (0,0,0), (0,1,0))
 	image.setFileName("./testResults/earth.bmp")
-	image.loadOBJ("./models/earth.obj", translate=(0,-0.25,0), scale=(0.10,0.10,0.10), fill=True,)
+	image.loadOBJ("./models/earth.obj", translate=(0,-0.25,0), scale=(0.10,0.10,0.10), fill=True,textured="./models/earth.bmp")
 	image.glFinish()
 
 def face():
@@ -41,7 +42,7 @@ def face():
 	image.glViewPort(0,0,800,800)
 	image.setFileName("./testResults/face.bmp")
 	image.lookAt((1,3,5), (0,0,0), (0,1,0))
-	image.loadOBJ("./models/model.obj", translate=(0,0,0), scale=(1,1,1), fill=True, textured=False)
+	image.loadOBJ("./models/model.obj", translate=(0,0,0), scale=(1,1,1), fill=True, textured="./models/model.bmp")
 	#image.glRenderTextureGrid(filename="./testResults/faceTexture.bmp", newfile=True, translate=(-0.5,-0.5), scale=(1.5,1.5)).glFinish()
 	image.glFinish()
 
@@ -80,7 +81,7 @@ def hugh():
 	image.glCreateWindow(800, 800)
 	image.lookAt((-1,3,5), (0,0,0), (0,1,0))
 	image.glViewPort(0, 0, 800, 800)
-	image.setFileName("./testResults/chewbacca.bmp")
+	image.setFileName("./testResults/hugh.bmp")
 	image.loadOBJ("./models/hugh.obj", translate=(0,-0.50,0), scale=(0.05,0.05,0.05), rotate=(-0.25,-0.20,0), fill=False)
 	image.glFinish()
 	
@@ -102,4 +103,4 @@ def generateText():
 
 
 if __name__ == "__main__":
-	face()
+	ico()

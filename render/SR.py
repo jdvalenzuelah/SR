@@ -124,6 +124,8 @@ class SR(object):
 		materials = self.__obj.getMaterials()
 		tvertex = self.__obj.getTextureVertex()
 		nvertex = self.__obj.getVertexNormalList()
+		self.__text = Texture(textured)
+
 
 		for face in faces:
 
@@ -145,6 +147,15 @@ class SR(object):
 					if intensity < 0:
 						continue
 					self.triangle(a, b, c,color=self.glColor(intensity, intensity, intensity))
+				else:
+					if self.__text.isTextured():
+						t1 = face[0][-1] - 1
+						t2 = face[1][-1] - 1
+						t3 = face[2][-1] - 1
+						tA = tvertex[t1]
+						tB = tvertex[t2]
+						tC = tvertex[t3]
+						self.triangle(a, b, c, texture=self.__text.isTextured(), texture_coords=(tA, tB, tC), intensity=intensity)
 			else:
 				f1 = face[0][0] - 1
 				f2 = face[1][0] - 1
@@ -165,6 +176,19 @@ class SR(object):
 						continue
 					self.triangle(A, B, C, color=self.glColor(intensity, intensity, intensity))
 					self.triangle(A, C, D, color=self.glColor(intensity, intensity, intensity))
+				else:
+					if self.__text.isTextured():
+						t1 = face[0][-1] - 1
+						t2 = face[1][-1] - 1
+						t3 = face[2][-1] - 1
+						t4 = face[3][-1] - 1
+						tA = tvertex[t1]
+						tB = tvertex[t2]
+						tC = tvertex[t3]
+						tD = tvertex[t4]
+						self.triangle(A, B, C, texture=self.__text.isTextured(), texture_coords=(tA, tB, tC), intensity=intensity)
+						self.triangle(A, C, D, texture=self.__text.isTextured(), texture_coords=(tA, tC, tD), intensity=intensity)
+
 
 	def triangle(self, A, B, C, color=None, texture=None, texture_coords=(), intensity=1):
 		"""
@@ -180,8 +204,8 @@ class SR(object):
 				if texture:
 					tA, tB, tC = texture_coords
 					tx = tA[0] * w + tB[0] * v + tC[0] * u
-					ty = tA[2] * w + tB[2] * v + tC[2] * u
-					color = texture.getColor(tx, ty, intensity)
+					ty = tA[1] * w + tB[1] * v + tC[1] * u
+					color = self.__text.getColor(tx, ty, intensity)
 				z = A[2] * w + B[2] * v + C[2] * u
 				if x<0 or y<0:
 					continue

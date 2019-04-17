@@ -25,14 +25,15 @@ class Texture(object):
 		"""
 		self.__text.write(self.__filename[:len(self.__filename)-4]+"text.bmp")
 
-	def getColor(self, x, y, intensity=1):
+	def getColor(self, tx, ty, intensity=1):
 		"""
 		"""
-		x = int(x*self.__text.width)
-		y = int(y*self.__text.height)
-		col = self.__text.color(int(intensity*self.__text.framebuffer[x][y][0]),int(intensity*self.__text.framebuffer[x][y][1]), int(intensity*self.__text.framebuffer[x][y][2]))
-		return col
+		x = int(ty*self.__text.width)
+		y = int(tx*self.__text.height)
 
-	def isTextured():
+		#self.__text.color(int(intensity*self.__text.framebuffer[x][y][0]),int(intensity*self.__text.framebuffer[x][y][1]), int(intensity*self.__text.framebuffer[x][y][2]))
+		return bytes(map(lambda b: round(b*intensity) if b*intensity > 0 else 0, self.__text.framebuffer[y][x]))
+
+	def isTextured(self):
 		return True if self.__text else False
 		
